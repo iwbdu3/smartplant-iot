@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pengairan Otomatis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .status {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .status p {
+            margin: 0;
+            font-size: 18px;
+        }
+        .control {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .control button {
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .control button:hover {
+            background-color: #218838;
+        }
+        .control button.off {
+            background-color: #dc3545;
+        }
+        .control button.off:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+
+        <div class="section">
+            <h2>Kontrol Manual</h2>
+            <div class="control">
+                <button id="toggle-btn" type="button">ON</button>
+            </div>
+        </div>
+    </div>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+
+const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8)
+const host = 'wss://broker.emqx.io:8084/mqtt'
+
+const options = {
+  keepalive: 30,
+  clientId: clientId,
+  protocolId: 'MQTT',
+  protocolVersion: 4,
+  clean: true,
+  reconnectPeriod: 1000,
+  connectTimeout: 30 * 1000,
+  rejectUnauthorized: false
+}
+
+console.log('connecting mqtt client')
+const client = mqtt.connect(host, options)
+
+client.on('error', (err) => {
+  console.log(err)
+  client.end()
+})
+
+client.on('connect', () => {
+  console.log('client connected:' + clientId)
+})
+
+
+</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const toggleButton = document.getElementById('toggle-btn');
+            const statusDiv = document.getElementById('status');
+            let isIrrigationOn = false;
+
+            toggleButton.addEventListener('click', () => {
+                isIrrigationOn = !isIrrigationOn;
+                if (isIrrigationOn) {
+                    client.publish("startlink/pompa", "off", { qos: 1, retain: true })
+                    toggleButton.textContent = 'OFF';
+                    toggleButton.classList.add('off');
+                    
+                } else {
+                    
+                    client.publish("startlink/pompa", "on", { qos: 1, retain: true })
+                    toggleButton.textContent = 'ON';
+                    toggleButton.classList.remove('off');
+                    }
+            });
+        });
+    </script>
+</body>
+</html>
